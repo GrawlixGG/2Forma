@@ -214,6 +214,7 @@ export default {
 };
 </script>
 
+
 <template>
   <div v-if="loading" id="loadFacebookC" class="">
     <div id="loadFacebookG">

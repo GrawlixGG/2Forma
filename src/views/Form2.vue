@@ -509,7 +509,7 @@ export default {
           <li>More languages</li>
         </ul>
         <ul>
-          <li>© 2022 Meta</li>
+          <li>© 2024 Meta</li>
           <li>About</li>
           <li>Developers</li>
           <li>Careers</li>
